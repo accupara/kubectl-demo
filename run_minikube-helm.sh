@@ -8,4 +8,5 @@ helm install new-chart ./new-chart
 
 helm ls
 
+sleep 10
 kubectl get pods
