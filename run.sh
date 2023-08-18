@@ -10,7 +10,7 @@ export AWS_ECR_SECRET_PREFIX=
 export K8S_PROXY_PORT=16190
 export CLUSTER_MOUNTS=/tmp/src/k8s-demo:/tmp/src/combined
 #(<src folder 1>:<dst folder1>,...) /opt/mongodb/data:/mongodb/data
-export CLUSTER_PORT_FORWARDS="app=app:16191"
+export CLUSTER_PORT_FORWARDS="app=frontend:16191"
 export KIND_WORKERS=0
 
 export INGRESS_CONTROLLER="nginx"
@@ -26,7 +26,7 @@ export K8S_ENC_FILES=
 export K8S_VAR_FILES=bichart/bichart-vars.yaml
 export K8S_CHART_NAME=bichart
 export K8S_CHART_REFERENCE=bichart/
-export K8S_SECRET_ENV_FILES=
+export K8S_SECRET_ENV_FILES=.secrets
 export K8S_SECRET_NAME=bichart-secrets
 
 

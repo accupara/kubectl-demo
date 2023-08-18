@@ -1,5 +1,10 @@
 global:
   namespace: "default"
+  appname: bookinventory
+  biroot: "/tmp/src/k8s-demo/book_inventory"
+  bifrontend: "/tmp/src/k8s-demo/book_inventory/frontend"
+  bibackend: "/tmp/src/k8s-demo/book_inventory/backend"
+  biDbName: "bi"
   googlecreds:
     mountPath: "/var/secrets/google"
     file: "key.json"
@@ -13,9 +18,9 @@ frontend:
   enabled: true
   appName: frontend
   serviceName: frontend
-  image: node@sha256:5407853b6aef463dc2da182751015db96958ebe5ea6ccd3bd35fd3f77f03bf8a
-  port: "3000"
-  targetPort: "3000"
+  image: node:latest
+  port: "5000"
+  targetPort: "5000"
   env:
 
 
@@ -24,9 +29,9 @@ backend:
   enabled: true
   appName: backend
   serviceName: backend
-  image: node@sha256:5407853b6aef463dc2da182751015db96958ebe5ea6ccd3bd35fd3f77f03bf8a
-  port: "5000"
-  targetPort: "5000"
+  image: node:latest
+  port: "3000"
+  targetPort: "3000"
   env:
 
 
@@ -35,8 +40,9 @@ mongodb:
   enabled: true
   appName: mongodb
   serviceName: mongodb
-  image: mongodb/mongodb@sha256:01c370d148a0ef3b88620825bf94bd0224818e3f948b1fa90e4b952cc6c022b7
-  port: "7020"
-  targetPort: "9000"
-  datadir: "/opt/accupara/data/mongodb"
+  image: bitnami/mongodb:latest
+  port: "27017"
+  targetPort: "27017"
+  datadir: /root/mongodata
+  env:
 

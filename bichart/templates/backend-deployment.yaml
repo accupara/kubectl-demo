@@ -25,12 +25,33 @@ spec:
         nodeAffinity:
           {{ toYaml .Values.backend.nodeAffinity | indent 10 }}
         {{- end }}
-      containers:
+      initContainers:
         - command:
-            - /docker-entrypoint
+          - npm
+          - i
           envFrom:
             - secretRef:
-                name: bi-secrets
+                name: bichart-secrets
+          env:
+            {{- if .Values.backend.env }}
+            {{- range $k, $v := .Values.backend.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end -}}
+            {{- end }}
+          workingDir: /app
+          image: {{ .Values.backend.image }}
+          name: {{ .Values.backend.appName }}-install
+          volumeMounts:
+            - mountPath: /app
+              name: {{ .Values.backend.appName }}-hostpath0
+      containers:
+        - command:
+            - npm
+            - start
+          envFrom:
+            - secretRef:
+                name: bichart-secrets
           env:
             {{- if .Values.backend.env }}
             {{- range $k, $v := .Values.backend.env }}
@@ -44,42 +65,32 @@ spec:
               value: {{ $v | quote }}
             {{- end -}}
             {{- end }}
+            - name: PORT
+              value: {{ .Values.backend.port | quote }}
+            - name: MONGO_URI
+              value: mongodb://{{ .Values.mongodb.serviceName }}:{{ .Values.mongodb.targetPort }}/{{ .Values.global.biDbName }}
+          workingDir: /app
           image: {{ .Values.backend.image }}
           name: {{ .Values.backend.appName }}
-          livenessProbe:
-            exec:
-              command:
-                - wget
-                - localhost
-                - -O
-                - /dev/null
-            failureThreshold: 3
-            periodSeconds: 60
-            timeoutSeconds: 30
+          #livenessProbe:
+          #  exec:
+          #    command:
+          #      - wget
+          #      - localhost
+          #      - -O
+          #      - /dev/null
+          #  failureThreshold: 3
+          #  periodSeconds: 60
+          #  timeoutSeconds: 30
           resources: {}
           volumeMounts:
-            - mountPath: /usr/share/nginx/html
+            - mountPath: /app
               name: {{ .Values.backend.appName }}-hostpath0
-            - mountPath: /app-config
-              name: {{ .Values.backend.appName }}-hostpath1
-            - mountPath: /docker-entrypoint
-              name: {{ .Values.backend.appName }}-hostpath2
-            - mountPath: /run/secrets/APP_VERSION
-              name: {{ .Values.backend.appName }}-hostpath3
       hostname: {{ .Values.backend.appName }}
       restartPolicy: Always
       volumes:
         - hostPath:
-            path: {{ .Values.global.amsdir }}/services/app/dist
+            path: {{ .Values.global.bibackend }}
           name: {{ .Values.backend.appName }}-hostpath0
-        - hostPath:
-            path: {{ .Values.global.amsdir }}/services/app/app-config
-          name: {{ .Values.backend.appName }}-hostpath1
-        - hostPath:
-            path: {{ .Values.global.amsdir }}/scripts/docker-entrypoint
-          name: {{ .Values.backend.appName }}-hostpath2
-        - hostPath:
-            path: /opt/accupara/versions/app.version
-          name: {{ .Values.backend.appName }}-hostpath3
 status: {}
 {{- end }}

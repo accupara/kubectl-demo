@@ -1,9 +1,9 @@
-name: ADBI
-description: A generated Helm Chart for ADBI from Skippbox Kompose
+name: BookInventory
+description: A generated Helm Chart for Book Inventory from Skippbox Kompose
 version: 0.0.1
 apiVersion: v2
 keywords:
-  - adbi
-  - adbi-chart
+  - bi
+  - bi-chart
 sources:
 home:

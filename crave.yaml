@@ -1,0 +1,6 @@
+k8s-demo:
+  includeFiles:
+    - .secrets
+settings:
+ autosync: true
+ link-service: lens:16190:16190

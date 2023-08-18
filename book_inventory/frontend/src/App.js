@@ -6,6 +6,10 @@ import ShowBookList from './components/ShowBookList';
 import ShowBookDetails from './components/ShowBookDetails';
 import UpdateBookInfo from './components/UpdateBookInfo';
 
+import axios from "axios";
+
+axios.defaults.baseURL = process.env.BACKEND_ADDRESS;
+
 const App = () => {
   return (
     <Router>

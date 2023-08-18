@@ -26,12 +26,9 @@ spec:
           {{ toYaml .Values.mongodb.nodeAffinity | indent 10 }}
         {{- end }}
       containers:
-        - args:
-            - server
-            - /store
-          envFrom:
+        - envFrom:
             - secretRef:
-                name: adbi-secrets
+                name: bichart-secrets
           env:
             {{- if .Values.mongodb.env }}
             {{- range $k, $v := .Values.mongodb.env }}
@@ -41,31 +38,26 @@ spec:
             {{- end }}
           image: {{ .Values.mongodb.image }}
           name: {{ .Values.mongodb.appName }}
-          livenessProbe:
-            exec:
-              command:
-                - curl --fail --silent localhost:9000/minio/health/live || exit 1
-            failureThreshold: 3
-            periodSeconds: 60
-            timeoutSeconds: 30
+          #livenessProbe:
+          #  exec:
+          #    command:
+          #      - curl --fail --silent localhost:9000/minio/health/live || exit 1
+          #  failureThreshold: 3
+          #  periodSeconds: 60
+          #  timeoutSeconds: 30
           ports:
-            - containerPort: 9000
-              hostPort: 7020
+            - containerPort: 27017 
+              hostPort: 27017
               protocol: TCP
           resources: {}
           volumeMounts:
-            - mountPath: /store
+            - mountPath: /data/db
               name: {{ .Values.mongodb.appName }}-hostpath0
-            - mountPath: /root/.minio
-              name: {{ .Values.mongodb.appName }}-hostpath1
       hostname: {{ .Values.mongodb.appName }}
       restartPolicy: Always
       volumes:
         - hostPath:
-            path: {{ .Values.mongodb.storedir }}
+            path: {{ .Values.mongodb.datadir }}
           name: {{ .Values.mongodb.appName }}-hostpath0
-        - hostPath:
-            path: {{ .Values.mongodb.configdir }}
-          name: {{ .Values.mongodb.appName }}-hostpath1
 status: {}
 {{- end }}
