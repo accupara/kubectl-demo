@@ -1,0 +1,71 @@
+{{ if .Values.mongodb.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: {{ .Values.mongodb.appName }}
+  name: {{ .Values.mongodb.appName }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mongodb.appName }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: {{ .Values.mongodb.appName }}
+    spec:
+      affinity:
+        {{- if .Values.mongodb.nodeAffinity }}
+        nodeAffinity:
+          {{ toYaml .Values.mongodb.nodeAffinity | indent 10 }}
+        {{- end }}
+      containers:
+        - args:
+            - server
+            - /store
+          envFrom:
+            - secretRef:
+                name: adbi-secrets
+          env:
+            {{- if .Values.mongodb.env }}
+            {{- range $k, $v := .Values.mongodb.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end -}}
+            {{- end }}
+          image: {{ .Values.mongodb.image }}
+          name: {{ .Values.mongodb.appName }}
+          livenessProbe:
+            exec:
+              command:
+                - curl --fail --silent localhost:9000/minio/health/live || exit 1
+            failureThreshold: 3
+            periodSeconds: 60
+            timeoutSeconds: 30
+          ports:
+            - containerPort: 9000
+              hostPort: 7020
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /store
+              name: {{ .Values.mongodb.appName }}-hostpath0
+            - mountPath: /root/.minio
+              name: {{ .Values.mongodb.appName }}-hostpath1
+      hostname: {{ .Values.mongodb.appName }}
+      restartPolicy: Always
+      volumes:
+        - hostPath:
+            path: {{ .Values.mongodb.storedir }}
+          name: {{ .Values.mongodb.appName }}-hostpath0
+        - hostPath:
+            path: {{ .Values.mongodb.configdir }}
+          name: {{ .Values.mongodb.appName }}-hostpath1
+status: {}
+{{- end }}

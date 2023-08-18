@@ -1,0 +1,19 @@
+{{ if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.serviceName }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.frontend.appName }}
+spec:
+  ports:
+    - port: {{ .Values.frontend.port }}
+      targetPort: {{ .Values.frontend.targetPort }}
+      protocol: TCP
+  type: ClusterIP
+  selector:
+    app: {{ .Values.frontend.appName }}
+status:
+  loadBalancer: {}
+{{- end }}

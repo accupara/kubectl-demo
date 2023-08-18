@@ -1,0 +1,42 @@
+global:
+  namespace: "default"
+  googlecreds:
+    mountPath: "/var/secrets/google"
+    file: "key.json"
+    secret: "google-cloud-key"
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: "/var/secrets/google/key.json"
+  env:
+
+#yes
+frontend:
+  enabled: true
+  appName: frontend
+  serviceName: frontend
+  image: node@sha256:5407853b6aef463dc2da182751015db96958ebe5ea6ccd3bd35fd3f77f03bf8a
+  port: "3000"
+  targetPort: "3000"
+  env:
+
+
+#yes
+backend:
+  enabled: true
+  appName: backend
+  serviceName: backend
+  image: node@sha256:5407853b6aef463dc2da182751015db96958ebe5ea6ccd3bd35fd3f77f03bf8a
+  port: "5000"
+  targetPort: "5000"
+  env:
+
+
+#yes
+mongodb:
+  enabled: true
+  appName: mongodb
+  serviceName: mongodb
+  image: mongodb/mongodb@sha256:01c370d148a0ef3b88620825bf94bd0224818e3f948b1fa90e4b952cc6c022b7
+  port: "7020"
+  targetPort: "9000"
+  datadir: "/opt/accupara/data/mongodb"
+

@@ -1,0 +1,85 @@
+{{ if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: {{ .Values.backend.appName }}
+  name: {{ .Values.backend.appName }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.appName }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: {{ .Values.backend.appName }}
+    spec:
+      affinity:
+        {{- if .Values.backend.nodeAffinity }}
+        nodeAffinity:
+          {{ toYaml .Values.backend.nodeAffinity | indent 10 }}
+        {{- end }}
+      containers:
+        - command:
+            - /docker-entrypoint
+          envFrom:
+            - secretRef:
+                name: bi-secrets
+          env:
+            {{- if .Values.backend.env }}
+            {{- range $k, $v := .Values.backend.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end -}}
+            {{- end }}
+            {{- if .Values.global.env }}
+            {{- range $k, $v := .Values.global.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end -}}
+            {{- end }}
+          image: {{ .Values.backend.image }}
+          name: {{ .Values.backend.appName }}
+          livenessProbe:
+            exec:
+              command:
+                - wget
+                - localhost
+                - -O
+                - /dev/null
+            failureThreshold: 3
+            periodSeconds: 60
+            timeoutSeconds: 30
+          resources: {}
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: {{ .Values.backend.appName }}-hostpath0
+            - mountPath: /app-config
+              name: {{ .Values.backend.appName }}-hostpath1
+            - mountPath: /docker-entrypoint
+              name: {{ .Values.backend.appName }}-hostpath2
+            - mountPath: /run/secrets/APP_VERSION
+              name: {{ .Values.backend.appName }}-hostpath3
+      hostname: {{ .Values.backend.appName }}
+      restartPolicy: Always
+      volumes:
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/app/dist
+          name: {{ .Values.backend.appName }}-hostpath0
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/app/app-config
+          name: {{ .Values.backend.appName }}-hostpath1
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/scripts/docker-entrypoint
+          name: {{ .Values.backend.appName }}-hostpath2
+        - hostPath:
+            path: /opt/accupara/versions/app.version
+          name: {{ .Values.backend.appName }}-hostpath3
+status: {}
+{{- end }}

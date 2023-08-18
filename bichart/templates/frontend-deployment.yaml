@@ -1,0 +1,121 @@
+{{ if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: {{ .Values.frontend.appName }}
+  name: {{ .Values.frontend.appName }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.frontend.appName }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: {{ .Values.frontend.appName }}
+    spec:
+      affinity:
+        {{- if .Values.frontend.nodeAffinity }}
+        nodeAffinity:
+          {{ toYaml .Values.frontend.nodeAffinity | indent 10 }}
+        {{- end }}
+      containers:
+        - command:
+            - /docker-entrypoint
+            - node
+          envFrom:
+            - secretRef:
+                name: bi-secrets
+          env:
+            {{- if .Values.frontend.env }}
+            {{- range $k, $v := .Values.frontend.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end -}}
+            {{- end }}
+            {{- if .Values.global.env }}
+            {{- range $k, $v := .Values.global.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end -}}
+            {{- end }}
+            # TODO: Currently mapping subdomain to redis
+            # The code needs to adjust to have correct redis hostname
+            - name: DB_HOST
+              value: {{ .Values.db.serviceName }}
+            - name: MINIO_HOST
+              value: {{ .Values.minio.serviceName }}
+            - name: MINIO_PORT
+              value: "{{ .Values.minio.port }}"
+          image: {{ .Values.frontend.image }}
+          name: {{ .Values.frontend.appName }}
+          livenessProbe:
+            exec:
+              command:
+                - curl --fail --silent localhost:3000/check || exit 1
+            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 15
+          resources: {}
+          volumeMounts:
+            - mountPath: /node_modules
+              name: {{ .Values.frontend.appName }}-hostpath0
+            - mountPath: /src/api
+              name: {{ .Values.frontend.appName }}-hostpath1
+            - mountPath: /src/auth
+              name: {{ .Values.frontend.appName }}-hostpath2
+            - mountPath: /src/index.js
+              name: {{ .Values.frontend.appName }}-hostpath3
+            - mountPath: /src/translations.json
+              name: {{ .Values.frontend.appName }}-hostpath4
+            - mountPath: /src/sharedlib
+              name: {{ .Values.frontend.appName }}-hostpath5
+            - mountPath: /src/sharedmodels
+              name: {{ .Values.frontend.appName }}-hostpath6
+            - mountPath: /docker-entrypoint
+              name: {{ .Values.frontend.appName }}-hostpath7
+            - mountPath: /run/secrets/APP_VERSION
+              name: {{ .Values.frontend.appName }}-hostpath8
+            - mountPath: /src/config/certs
+              name: {{ .Values.frontend.appName }}-hostpath9
+      hostname: {{ .Values.frontend.appName }}
+      restartPolicy: Always
+      volumes:
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/node_modules
+          name: {{ .Values.frontend.appName }}-hostpath0
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/api/api
+          name: {{ .Values.frontend.appName }}-hostpath1
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/api/auth
+          name: {{ .Values.frontend.appName }}-hostpath2
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/index.js
+          name: {{ .Values.frontend.appName }}-hostpath3
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/translations.json
+          name: {{ .Values.frontend.appName }}-hostpath4
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/sharedlib
+          name: {{ .Values.frontend.appName }}-hostpath5
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/services/sharedmodels
+          name: {{ .Values.frontend.appName }}-hostpath6
+        - hostPath:
+            path: {{ .Values.global.amsdir }}/scripts/docker-entrypoint
+          name: {{ .Values.frontend.appName }}-hostpath7
+        - hostPath:
+            path: {{ .Values.global.amstop }}/api.version
+          name: {{ .Values.frontend.appName }}-hostpath8
+        - hostPath:
+            path: {{ .Values.global.amstop }}/config/certs
+          name: {{ .Values.frontend.appName }}-hostpath9
+status: {}
+{{- end }}
