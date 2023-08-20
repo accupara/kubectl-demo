@@ -350,11 +350,12 @@ waitfor_pod_ready() {
 }
 
 install_monit
-if [ "$1" == "kind" ]; then
-	start_kind
-else
-	start_minikube
-fi
+# if [ "$1" == "kind" ]; then
+# 	start_kind
+# else
+# 	start_minikube
+# fi
+start_kind
 install_ingress_controller
 create_aws_registry_secrets
 create_from_env_secrets
