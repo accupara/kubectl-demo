@@ -324,6 +324,26 @@ EOF
     done
 }
 
+setup_ingress_port_frowards() {
+    print_title "Setting up required port forwards for ingress."
+	echo "  Creating port forward script"
+	cat <<EOF > /tmp/portforward.${targetPort}.sh
+#!/bin/bash
+set -m
+sudo ${KUBECTL_EXE} port-forward -n ingress-nginx --address 0.0.0.0 svc/ingress-nginx-controller 8080:80
+pid=\$!
+jobs -l
+echo \$pid > /tmp/portforward.'${targetPort}'.pid
+fg %1
+EOF
+	chmod a+x /tmp/portforward.${targetPort}.sh
+
+	echo "Mapping: ${appLabel} pod: ${POD_NAME} container_port: ${CONTAINER_PORT} hostport: ${targetPort}"
+	tmux_run_and_monitor_program portforwards portforward.${targetPort} /tmp/portforward.${targetPort}.sh
+}
+
+
+
 waitfor_pod_ready() {
 	echo "Waiting for pod $1 to be ready"
 	${KUBECTL_EXE} wait --timeout=2400s --for=condition=ready pod -l $1
@@ -340,7 +360,7 @@ create_aws_registry_secrets
 create_from_env_secrets
 create_gcp_sa_secrets
 install_chart
-setup_port_frowards
+setup_ingress_port_frowards
 setup_cluster_access_proxy
 
 start_monit
