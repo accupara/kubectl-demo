@@ -3,4 +3,4 @@ k8s-demo:
     - .secrets
 settings:
  autosync: true
- link-service: lens:16190:16190
+ link-service: lens:16190:16190,http:8080:8080
